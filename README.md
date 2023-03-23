@@ -3,11 +3,23 @@
 ## How it started
 March 22, 2023
 ```
-Me: I want to start a repository that enables you to be the best assistant by allowing you access to external tools such as python environment, calculator, internet searches, and more. It can also optimize itself and make changes to its own code via git commands. Can you write python code which can call yourself using openai api (using model "gpt-4") and allows for extensions to be written. let's start with giving you access to python, terminal commands, and also the ability to run git commands so that it can view code changes, files, and make new code submissions? Let's keep it simple and make this a commandline program that a user can start, and then takes input from the assistant (you) via a chat interface
+Me: I want to start a repository that enables you to be the best assistant by allowing you
+access to external tools such as python environment, calculator, internet searches, and more.
+It can also optimize itself and make changes to its own code via git commands. Can you write
+python code which can call yourself using openai api (using model "gpt-4") and allows for
+extensions to be written.
 
-GPT-4: Certainly! I can provide you with some guidance on how to build such a system. However, please keep in mind that implementing a fully functional assistant with the features you described may take significant time and effort.
+Let's start with giving you access to python, terminal commands, and also the ability to run
+git commands so that it can view code changes, files, and make new code submissions? Let's
+keep it simple and make this a commandline program that a user can start, and then takes input
+from the assistant (you) via a chat interface.
 
-To get started, you can use the OpenAI API to access the GPT-4 model and generate responses to user inputs. Here is some example Python code to accomplish that:
+GPT-4: Certainly! I can provide you with some guidance on how to build such a system. However,
+please keep in mind that implementing a fully functional assistant with the features you described
+may take significant time and effort.
+
+To get started, you can use the OpenAI API to access the GPT-4 model and generate responses to
+user inputs. Here is some example Python code to accomplish that:
 
 python
 Copy code
