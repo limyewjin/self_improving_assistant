@@ -1,96 +1,84 @@
-import os
-from git import Repo, RemoteProgress
+import subprocess
 
-class CustomProgressPrinter(RemoteProgress):
-    def update(self, op_code, cur_count, max_count=None, message=''):
-        print(self._cur_line)
+import io
+from contextlib import redirect_stdout, redirect_stderr
 
-def clone_repository(repository_url, local_path, progress=None):
+def execute_python_code(code):
     """
-    Clone a Git repository from the given URL to the specified local path.
+    Executes a given Python code string and returns the standard output and error as strings.
 
     Args:
-        repository_url (str): The URL of the Git repository to clone.
-        local_path (str): The local path where the repository will be cloned.
-        progress (RemoteProgress, optional): An instance of a RemoteProgress subclass to show progress. Defaults to None.
+        code (str): A string containing Python code to be executed.
 
     Returns:
-        None
+        tuple: A tuple containing the standard output (stdout) and standard error (stderr) as strings.
     """
-    if progress is None:
-        progress = CustomProgressPrinter()
-    if not os.path.exists(local_path):
-        Repo.clone_from(repository_url, local_path, progress=progress)
-    else:
-        print(f"Local path {local_path} already exists.")
-
-def make_commit(repository_path, commit_message):
-    """
-    Add all changes, commit, and push to the origin repository.
-
-    Args:
-        repository_path (str): The local path of the repository.
-        commit_message (str): The commit message.
-
-    Returns:
-        None
-    """
-    repo = Repo(repository_path)
-    repo.git.add(".")
-    repo.index.commit(commit_message)
-    repo.remotes.origin.push()
-
-def list_files(repository_path):
-    """
-    List all files in a Git repository.
-
-    Args:
-        repository_path (str): The local path of the repository.
-
-    Returns:
-        list: A list of file paths in the repository.
-    """
-    repo = Repo(repository_path)
-    return [item.path for item in repo.head.commit.tree.traverse()]
-
-def get_file_contents(repository_path, file_path):
-    """
-    Get the contents of a specific file in a Git repository.
-
-    Args:
-        repository_path (str): The local path of the repository.
-        file_path (str): The path of the file relative to the repository root.
-
-    Returns:
-        str: The contents of the file, or None if the file is not found.
-    """
-    repo = Repo(repository_path)
+    stdout_buffer = io.StringIO()
+    stderr_buffer = io.StringIO()
     try:
-        blob = repo.head.commit.tree / file_path
-        return blob.data_stream.read().decode('utf-8')
-    except KeyError:
-        print(f"File '{file_path}' not found in the repository")
-        return None
+        with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+            exec(code, globals())
+    except Exception as e:
+        return None, str(e)
+    return stdout_buffer.getvalue(), stderr_buffer.getvalue()
 
-def get_repository_info(repository_path):
+def execute_terminal_command(command, timeout=None, shell=False, print_output=False, raise_on_error=True):
     """
-    Get information about a Git repository, such as branches, total commits, and the latest commit details.
+    Run a terminal command and return the output, error, and return code.
 
     Args:
-        repository_path (str): The local path of the repository.
+        command (str): The command to run.
+        timeout (int, optional): Maximum time (in seconds) to wait for the command to complete. Defaults to None.
+        shell (bool, optional): Run the command in a shell. Defaults to False.
+        print_output (bool, optional): Print the output and error streams. Defaults to False.
+        raise_on_error (bool, optional): Raise an exception if the command returns a non-zero exit status. Defaults to True.
 
     Returns:
-        dict: A dictionary containing repository information.
+        dict: A dictionary containing the return code, stdout, and stderr.
     """
-    repo = Repo(repository_path)
-    branches = [branch.name for branch in repo.branches]
-    commits = list(repo.iter_commits())
-    return {
-        "branches": branches,
-        "total_commits": len(commits),
-        "latest_commit": {
-            "message": commits[0].message,
-            "author": commits[0].author.name,
-            "date": commits[0].committed_datetime,
-        },
-    }
+    try:
+        process = subprocess.Popen(
+            command.split() if not shell else command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=shell,
+            text=True,
+        )
+        stdout, stderr = process.communicate(timeout=timeout)
+
+        if process.returncode != 0 and raise_on_error:
+            raise subprocess.CalledProcessError(
+                process.returncode, command, output=stdout, stderr=stderr
+            )
+
+        if print_output:
+            print(f"Output:\n{stdout}")
+            if stderr:
+                print(f"Error:\n{stderr}")
+
+        return {
+            "returncode": process.returncode,
+            "stdout": stdout.strip(),
+            "stderr": stderr.strip(),
+        }
+
+    except subprocess.TimeoutExpired as timeout_error:
+        process.kill()
+        print(f"TimeoutError: Command '{command}' timed out after {timeout} seconds")
+        raise
+
+    except subprocess.CalledProcessError as called_process_error:
+        print(
+            f"CalledProcessError: Command '{command}' returned non-zero exit status {called_process_error.returncode}"
+        )
+        if not raise_on_error:
+            return {
+                "returncode": called_process_error.returncode,
+                "stdout": called_process_error.stdout.strip(),
+                "stderr": called_process_error.stderr.strip(),
+            }
+        raise
+
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        raise
