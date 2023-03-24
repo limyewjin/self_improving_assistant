@@ -94,3 +94,23 @@ def get_repository_info(repository_path):
             "date": commits[0].committed_datetime,
         },
     }
+
+def update_file_contents(repository_path, file_path, new_content):
+    """
+    Update the contents of a specific file in a Git repository.
+
+    Args:
+        repository_path (str): The local path of the repository.
+        file_path (str): The path of the file relative to the repository root.
+        new_content (str): The new content to be written to the file.
+
+    Returns:
+        None
+    """
+    full_path = os.path.join(repository_path, file_path)
+    if os.path.exists(full_path):
+        with open(full_path, 'w') as file:
+            file.write(new_content)
+        return(f"File '{file_path}' successfully written")
+    else:
+        return(f"File '{file_path}' not found in the repository")
