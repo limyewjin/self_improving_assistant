@@ -14,6 +14,7 @@ def execute_command(response, messages):
     3. !git_list_files <path> - Lists the files in the specified path using Git.
     4. !git_get_file_contents <file_path> - Retrieves the contents of the specified file using Git.
     5. !git_update_file_contents <file_path> <new_content> - Updates the file path to new content.
+    6. !git_make_commit <commit_message> - Add all changes, commit, and push to the origin repository.
     
     Args:
         response (str): A string containing the response with potential commands to be executed.
@@ -65,14 +66,42 @@ def execute_command(response, messages):
             messages.append({"role": "assistant", "content": f"Git get file contents: {file_path}\nOutput: {output}"})
 
     # Check for Git update file contents commands
-    git_update_file_contents = re.findall(r'^!git_update_file_contents (.+?)$', response)
+    git_update_file_contents = (
+        re.findall(r'^!git_update_file_contents (.+?)(?:$|```)', response, flags=re.MULTILINE) +
+        re.findall(r'^.*```\n!git_update_file_contents (.+?)\n```.*$', response, flags=re.MULTILINE | re.DOTALL))
     if git_update_file_contents:
-        command_found = True
-        parts = git_helper.update_file_contents.split(' ')
-        file_path = parts[0].strip()
-        content = ' '.join(parts[1:]).strip()
-        output = git_helper.update_file_contents(".", file_path, content)
-        messages.append({"role": "assistant", "content": f"Git update file contents: {file_path}\nOutput: {output}"})
+        if len(git_update_file_contents) == 1:
+          command_found = True
+          parts = git_update_file_contents[0].split(' ')
+          file_path = parts[0].strip()
+          content = ' '.join(parts[1:]).strip()
+          if content.startswith('"') and content.endswith('"'):
+              content = content.strip('"')
+          if content.startswith("'") and content.endswith("'"):
+              content = content.strip("'")
+          if content.count('\n') <= 1:
+              content = content.encode("utf-8").decode("unicode_escape")
+          output = git_helper.update_file_contents(".", file_path, content)
+          print(f"git_update_file_contents: {file_path}\nOutput: {output}\n")
+          messages.append({"role": "assistant", "content": f"Git update file contents: {file_path}\nOutput: {output}"})
+        else:
+          print(f"git_update_file_contents: unable to parse")
+          messages.append({"role": "assistant", "content": f"Git update file contents: unable to parse"})
+
+    # Check for Git get file contents commands
+    git_make_commit = re.findall(r'^!git_make_commit (.+?)$', response, re.MULTILINE)
+    if git_make_commit:
+        if len(git_make_commit) == 1:
+          command_found = True
+
+          commit_message = git_make_commit[0].strip()
+          git_helper.make_commit(".", commit_message)
+          print(f"git_make_commit: {commit_message}\n")
+          messages.append({"role": "assistant", "content": f"Git make commit\nOutput: {commit_message}"})
+        else:
+          print(f"git_make_commit: unable to parse")
+          messages.append({"role": "assistant", "content": f"Git make commit: unable to parse"})
+
 
     return command_found
 

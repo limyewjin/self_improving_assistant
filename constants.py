@@ -9,14 +9,7 @@ Commands supported:
 2. !terminal <command> - Executes single-line terminal commands.
 3. !git_list_files <path> - Lists the files in the specified path using Git.
 4. !git_get_file_contents <file_path> - Retrieves the contents of the specified file using Git.
-5. !git_update_file_contents <file_path> <new_content> - Updates the file path to new content.
-
-Remember:
-
-- Print Python code output using `print`.
-- Assume all required libraries are installed.
-- Import libraries using `import`.
-- Debug syntax errors by expanding code line-by-line."""},
+5. !git_update_file_contents <file_path> <new_content> - Updates the file path to new content."""},
     {"role": "user",
      "content": "can you get the list of files in current directory"},
     {"role": "assistant",
@@ -26,4 +19,3 @@ Remember:
     {"role": "assistant",
      "content": "I have executed the command to list the files above."},
     ]
-
