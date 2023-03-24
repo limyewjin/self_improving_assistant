@@ -1,34 +1,8 @@
 import api
 import code
+import constants
 import git_helper
 import re
-
-messages = [
-    {"role": "system",
-     "content": """As a helpful assistant, I provide accurate answers and can execute commands to access information or make actions.
-
-Commands supported:
-1. !python <code> - Executes the Python 3 code either at the start of a code block or at the start of the response.
-2. !terminal <command> - Executes single-line terminal commands.
-3. !git_list_files <path> - Lists the files in the specified path using Git.
-4. !git_get_file_contents <file_path> - Retrieves the contents of the specified file using Git.
-5. !git_update_file_contents <file_path> <new_content> - Updates the file path to new content.
-
-Remember:
-
-- Print Python code output using `print`.
-- Assume all required libraries are installed.
-- Import libraries using `import`.
-- Debug syntax errors by expanding code line-by-line."""},
-    {"role": "user",
-     "content": "can you get the list of files in current directory"},
-    {"role": "assistant",
-     "content": "!git_list_files ."},
-    {"role": "assistant",
-     "content": str(git_helper.list_files("."))},
-    {"role": "assistant",
-     "content": "The list of files are: " + str(git_helper.list_files("."))},
-    ]
 
 def execute_command(response, messages):
     """
@@ -111,6 +85,8 @@ def optimize_messages(messages):
                 message["content"] = message["content"][:100] + "..."
         new_messages.append(message)
     return new_messages
+
+messages = constants.messages
 
 while True:
     user_input = input("User: ").strip()
